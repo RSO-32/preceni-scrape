@@ -4,15 +4,45 @@ import requests
 import time
 import tomllib
 from dataclasses import dataclass
+import datetime
+import json
 
 
 @dataclass
 class Product:
-    seller_id: str
-    name: str
+    timestamp: datetime
+    seller_product_id: str
+    seller_product_name: str
     price: float
     categories: list[str]
     brand: str
+    seller: str
+
+    def toJSON(self):
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "seller_product_id": self.seller_product_id,
+            "seller_product_name": self.seller_product_name,
+            "price": self.price,
+            "categories": self.categories,
+            "brand": self.brand,
+            "seller": self.seller,
+        }
+
+
+def send_products(products: list[Product]):
+    logging.info(f"    Sending {len(products)} products")
+
+    url = "http://localhost:5000/product"
+    headers = {"content-type": "application/json"}
+
+    try:
+        data = [product.toJSON() for product in products]
+        response = requests.put(url, data=json.dumps(data), headers=headers)
+        logging.info(f"      Response: {response.status_code}")
+    except requests.exceptions.HTTPError as e:
+        logging.error(e)
+        return
 
 
 def scrape_mercator(config, offset=0, from_=0):
@@ -32,11 +62,13 @@ def scrape_mercator(config, offset=0, from_=0):
 
             products.append(
                 Product(
-                    seller_id=product["itemId"],
-                    name=product["short_name"],
+                    timestamp=datetime.datetime.now(),
+                    seller_product_id=product["itemId"],
+                    seller_product_name=product["short_name"],
                     price=product["data"]["current_price"],
                     categories=categories,
                     brand=product["data"]["brand_name"],
+                    seller="Mercator",
                 )
             )
 
@@ -56,6 +88,8 @@ def scrape_mercator(config, offset=0, from_=0):
             logging.info(f"    Extracting products")
             products = extract_products(response.json())
             logging.info(f"    Found {len(products)} products")
+
+            send_products(products)
 
         except requests.exceptions.HTTPError as e:
             logging.error(e)
