@@ -2,11 +2,12 @@ import logging
 import sys
 import requests
 import time
-import tomllib
 from dataclasses import dataclass
 import datetime
 import json
-
+from dotenv import load_dotenv
+from os.path import join, dirname
+from os import environ
 
 @dataclass
 class Product:
@@ -33,7 +34,7 @@ class Product:
 def send_products(products: list[Product]):
     logging.info(f"    Sending {len(products)} products")
 
-    url = "http://localhost:5000/product"
+    url = {environ.get("DODAJ_IZDELEK_ENDPOINT")}
     headers = {"content-type": "application/json"}
 
     try:
@@ -45,7 +46,7 @@ def send_products(products: list[Product]):
         return
 
 
-def scrape_mercator(config, offset=0, from_=0):
+def scrape_mercator(offset=0, from_=0):
     def extract_products(products_response) -> list[Product]:
         products = []
 
@@ -97,7 +98,7 @@ def scrape_mercator(config, offset=0, from_=0):
 
         offset += 1
         from_ = offset * limit
-        time.sleep(config["requests"]["delay"])
+        time.sleep(environ.get("REQUESTS_DELAY"))
 
 
 def scrape_tus():
@@ -109,11 +110,11 @@ def scrape_spar():
 
 
 if __name__ == "__main__":
-    with open("config.toml", "rb") as f:
-        config = tomllib.load(f)
+    dotenv_path = join(dirname(__file__), ".env")
+    load_dotenv(dotenv_path)
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-    scrape_mercator(config)
-    scrape_tus(config)
-    scrape_spar(config)
+    scrape_mercator()
+    scrape_tus()
+    scrape_spar()
