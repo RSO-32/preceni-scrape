@@ -34,7 +34,7 @@ class Product:
 def send_products(products: list[Product]):
     logging.info(f"    Sending {len(products)} products")
 
-    url = {environ.get("DODAJ_IZDELEK_ENDPOINT")}
+    url = environ.get("DODAJ_IZDELEK_ENDPOINT")
     headers = {"content-type": "application/json"}
 
     try:
