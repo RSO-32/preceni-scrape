@@ -8,6 +8,8 @@ import json
 from dotenv import load_dotenv
 from os.path import join, dirname
 from os import environ
+import logging, graypy
+
 
 @dataclass
 class Product:
@@ -113,6 +115,9 @@ if __name__ == "__main__":
     dotenv_path = join(dirname(__file__), ".env")
     load_dotenv(dotenv_path)
 
+    graylog_handler = graypy.GELFUDPHandler("logs.meteo.pileus.si", 12201)
+    graylog_handler.setFormatter(logging.Formatter("preceni-scrape %(asctime)s %(levelname)s %(name)s %(message)s]"))
+    logging.getLogger().addHandler(graylog_handler)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     scrape_mercator()
