@@ -1,3 +1,7 @@
 requests
+Flask
+Flask-Cors
 python-dotenv
 graypy
+flask-openapi3
+psutil

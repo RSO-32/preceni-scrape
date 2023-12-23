@@ -37,4 +37,4 @@ jobs:
       with:
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/preceni-scrape:${{ steps.current-time.outputs.formattedTime }}
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/preceni-data:${{ steps.current-time.outputs.formattedTime }}
