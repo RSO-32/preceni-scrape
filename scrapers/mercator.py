@@ -40,6 +40,7 @@ class MercatorScraper:
                         timestamp=datetime.now(),
                         seller_product_id=product["itemId"],
                         seller_product_name=product["short_name"],
+                        image_url=product["mainImageSrc"],
                         price=product["data"]["current_price"],
                         categories=categories,
                         brand=product["data"]["brand_name"],

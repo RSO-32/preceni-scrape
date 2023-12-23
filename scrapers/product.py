@@ -14,12 +14,14 @@ class Product:
     categories: list[str]
     brand: str
     seller: str
+    image_url: str
 
     def toJSON(self):
         return {
             "timestamp": self.timestamp.isoformat(),
             "seller_product_id": self.seller_product_id,
             "seller_product_name": self.seller_product_name,
+            "image_url": self.image_url,
             "price": self.price,
             "categories": self.categories,
             "brand": self.brand,
