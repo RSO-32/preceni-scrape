@@ -11,7 +11,7 @@ from scrapers.mercator import MercatorScraper
 import threading
 
 info = Info(title="Preceni scrape", version="1.0.0", description="Preceni scrape API")
-app = OpenAPI(__name__, info=info)
+app = OpenAPI(__name__, info=info, doc_prefix="/scrape/openapi")
 CORS(app)  # Enable CORS for all routes
 
 # Logging
