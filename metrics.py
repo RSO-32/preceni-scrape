@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import shutil, psutil
 from scrapers.mercator import MercatorScraper
 from os import environ
+from config import Config
 
 
 @dataclass
@@ -24,5 +25,6 @@ class Metrics:
         metrics.append(Metric("ram_percent", str(psutil.virtual_memory().percent)))
         metrics.append(Metric("requests_delay_seconds", environ.get("REQUESTS_DELAY")))
         metrics.append(Metric("mercator_scraper_on", MercatorScraper.enabled))
+        metrics.append(Metric("mercator_api_endpoint", Config.mercator_api_endpoint))
 
         return metrics

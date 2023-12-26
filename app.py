@@ -1,4 +1,4 @@
-from flask import jsonify, current_app
+from flask import jsonify, current_app, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from os.path import join, dirname
@@ -9,6 +9,7 @@ import logging, graypy
 from flask_openapi3 import OpenAPI, Info, Tag
 from scrapers.mercator import MercatorScraper
 import threading
+from config import Config
 
 info = Info(title="Preceni scrape", version="1.0.0", description="Preceni scrape API")
 app = OpenAPI(__name__, info=info, doc_prefix="/scrape/openapi")
@@ -60,6 +61,16 @@ def mercator_scraper_toggle():
         scraper_thread.start()
 
     return jsonify({"enabled": MercatorScraper.enabled})
+
+
+@app.put("/scrape/scrapers/mercator/endpoint", summary="Mercator API endpoint")
+def mercator_api_endpoint():
+    app.logger.info("PUT: Mercator endpoint")
+
+    data = request.get_json()
+    Config.mercator_api_endpoint = data["mercator_api_endpoint"]
+
+    return Config.mercator_api_endpoint
 
 
 @app.get("/scrape/metrics", tags=[health_tag], summary="Metrics")

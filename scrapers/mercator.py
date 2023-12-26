@@ -1,4 +1,3 @@
-import logging
 from os import environ
 from typing import Any
 from scrapers.product import Product
@@ -6,6 +5,7 @@ from datetime import datetime
 import requests
 import time
 from scrapers.product import Product
+from config import Config
 
 
 class MercatorScraper:
@@ -14,9 +14,8 @@ class MercatorScraper:
 
     @staticmethod
     def scrape(*args, **kwargs):
-        logging.info("Starting Mercator scraper")
-
         MercatorScraper.current_app = kwargs["app"]
+        MercatorScraper.current_app.logger.info("Starting Mercator scraper")
 
         offset = 0
         from_ = 0
@@ -26,7 +25,7 @@ class MercatorScraper:
 
             for product in products_response:
                 if "itemId" not in product:
-                    logging.info(f"Skipping promotional image")
+                    MercatorScraper.current_app.logger.info(f"Skipping promotional image")
                     continue
 
                 categories = [
@@ -55,7 +54,7 @@ class MercatorScraper:
         while MercatorScraper.enabled:
             MercatorScraper.current_app.logger.info("Scraping Mercator")
 
-            url = f"https://trgovina.mercator.si/market/products/browseProducts/getProducts?limit={limit}&offset={offset}&from={from_}"
+            url = f"{Config.mercator_api_endpoint}?limit={limit}&offset={offset}&from={from_}"
 
             try:
                 MercatorScraper.current_app.logger.info(f"Requesting {url}")
@@ -68,9 +67,34 @@ class MercatorScraper:
 
                 Product.send_products(products, MercatorScraper.current_app.logger)
 
-            except requests.exceptions.HTTPError as e:
-                MercatorScraper.current_app.logger.error(e)
-                continue
+            except Exception as e:
+                MercatorScraper.current_app.logger.error("Received HTTP error, opening circuit breaker")
+
+                fail_count = 0
+
+                while True:
+                    if fail_count == 3:
+                        MercatorScraper.current_app.logger.error("Permanently opening circuit breaker")
+                        MercatorScraper.enabled = False
+                        break
+
+                    MercatorScraper.current_app.logger.info("Waiting before retrying")
+                    time.sleep(int(environ.get("REQUESTS_DELAY")) * 2)
+
+                    MercatorScraper.current_app.logger.info("Half-opening circuit breaker")
+
+                    try:
+                        response = requests.get(Config.mercator_api_endpoint)
+
+                        if response.status_code == 200:
+                            MercatorScraper.current_app.logger.info("API is up, closing circuit breaker")
+                            break
+                        else:
+                            MercatorScraper.current_app.logger.error("API still down")
+                            fail_count += 1
+                    except Exception as e:
+                        MercatorScraper.current_app.logger.error("API still down")
+                        fail_count += 1
 
             offset += 1
             from_ = offset * limit
